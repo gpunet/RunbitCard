@@ -7,10 +7,8 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
 
 contract RunbitCard is ERC721, ERC721Enumerable, ERC721URIStorage, Pausable, AccessControl, ERC721Burnable {
-    using Counters for Counters.Counter;
     struct MetaData {
         uint64 specialty;
         uint64 comfort;
@@ -22,7 +20,6 @@ contract RunbitCard is ERC721, ERC721Enumerable, ERC721URIStorage, Pausable, Acc
 
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    Counters.Counter private _tokenIdCounter;
 
     constructor() ERC721("Runbit Card", "RBC") {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -38,13 +35,11 @@ contract RunbitCard is ERC721, ERC721Enumerable, ERC721URIStorage, Pausable, Acc
         _unpause();
     }
 
-    function safeMint(address to, string memory uri, MetaData memory meta) public onlyRole(MINTER_ROLE) {
-        uint256 tokenId = _tokenIdCounter.current();
-        _tokenIdCounter.increment();
+    function safeMint(address to, uint256 tokenId, string memory uri, MetaData memory metaData) public onlyRole(MINTER_ROLE) {
         _safeMint(to, tokenId);
         _setTokenURI(tokenId, uri);
         // set metadata
-        _metaData[tokenId] = meta;
+        _metaData[tokenId] = metaData;
     }
 
     function _beforeTokenTransfer(address from, address to, uint256 tokenId)
@@ -70,7 +65,7 @@ contract RunbitCard is ERC721, ERC721Enumerable, ERC721URIStorage, Pausable, Acc
         return super.tokenURI(tokenId);
     }
 
-    function tokenMeta(uint256 tokenId) public view returns (MetaData memory)
+    function tokenMetaData(uint256 tokenId) public view returns (MetaData memory)
     {
         return _metaData[tokenId];
     }
