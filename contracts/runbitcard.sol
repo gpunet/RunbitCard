@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.15;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
@@ -17,25 +17,36 @@ contract RunbitCard is ERC721, ERC721Enumerable, ERC721URIStorage, Pausable, Acc
         uint32 level;
     }
     mapping(uint256 => MetaData) private _metaData;
+    mapping(uint256 => uint256) private _locked;
 
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 public constant LOCK_ROLE = keccak256("LOCK_ROLE");
 
     constructor() ERC721("Runbit Card", "RBC") {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(PAUSER_ROLE, msg.sender);
         _grantRole(MINTER_ROLE, msg.sender);
+        _grantRole(LOCK_ROLE, msg.sender);
     }
 
-    function pause() public onlyRole(PAUSER_ROLE) {
+    function pause() external onlyRole(PAUSER_ROLE) {
         _pause();
     }
 
-    function unpause() public onlyRole(PAUSER_ROLE) {
+    function unpause() external onlyRole(PAUSER_ROLE) {
         _unpause();
     }
 
-    function safeMint(address to, uint256 tokenId, string memory uri, MetaData memory metaData) public onlyRole(MINTER_ROLE) {
+    function lock(uint256 tokenId) external onlyRole(LOCK_ROLE) {
+        _locked[tokenId] = 1;
+    }
+
+    function unlock(uint256 tokenId) external onlyRole(LOCK_ROLE) {
+        _locked[tokenId] = 0;
+    }
+
+    function safeMint(address to, uint256 tokenId, string memory uri, MetaData memory metaData) external onlyRole(MINTER_ROLE) {
         _safeMint(to, tokenId);
         _setTokenURI(tokenId, uri);
         // set metadata
@@ -47,6 +58,7 @@ contract RunbitCard is ERC721, ERC721Enumerable, ERC721URIStorage, Pausable, Acc
         whenNotPaused
         override(ERC721, ERC721Enumerable)
     {
+        require(_locked[tokenId] == 0, "This token is locked!");
         super._beforeTokenTransfer(from, to, tokenId);
     }
 
