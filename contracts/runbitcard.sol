@@ -23,11 +23,11 @@ contract RunbitCard is ERC721, ERC721Enumerable, ERC721URIStorage, Pausable, Acc
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant LOCK_ROLE = keccak256("LOCK_ROLE");
 
-    constructor() ERC721("Runbit Card", "RBC") {
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _grantRole(PAUSER_ROLE, msg.sender);
-        _grantRole(MINTER_ROLE, msg.sender);
-        _grantRole(LOCK_ROLE, msg.sender);
+    constructor(address admin) ERC721("Runbit Card", "RBC") {
+        _grantRole(DEFAULT_ADMIN_ROLE, admin);
+        _grantRole(PAUSER_ROLE, admin);
+        _grantRole(MINTER_ROLE, admin);
+        _grantRole(LOCK_ROLE, admin);
     }
 
     function pause() external onlyRole(PAUSER_ROLE) {
